@@ -58,13 +58,13 @@ fn main() -> Result<()> {
             break;
         }
 
-        // Detect keypoints using SIFT
-        let mut sift = SIFT::create(0, 3, 0.04, 10.0, 1.6, false)?;
+        // Detect keypoints using SIFT [Recommended setting is 0.1]
+        let mut sift = SIFT::create(0, 3, 0.1, 10.0, 1.6, false)?;
         let mut keypoints = Vector::<KeyPoint>::new();
         sift.detect(&frame, &mut keypoints, &core::no_array())?;
         
         // Filter keypoints by minimum size
-        let min_size = 20.0; // Adjust this threshold as needed
+        let min_size = 10.0; // Adjust this threshold as needed [Recommended setting]
         let filtered_keypoints: Vector<KeyPoint> = keypoints.iter()
             .filter(|kp| kp.size() >= min_size)
             .collect();
@@ -74,10 +74,24 @@ fn main() -> Result<()> {
             let size = kp.size() as i32 / 2;
             let top_left = core::Point::new((center.x - size as f32) as i32, (center.y - size as f32) as i32);
         
-            // Draw rectangle
+            // Define rectangle
+            let rect = core::Rect::new(
+                top_left.x.max(0),
+                top_left.y.max(0),
+                (size * 2).min(frame_width - top_left.x),
+                (size * 2).min(frame_height - top_left.y),
+            );
+
+            // Invert colors inside the rectangle on the frame
+            if rect.width > 0 && rect.height > 0 {
+                let mut roi = Mat::roi_mut(&mut frame, rect)?;
+                core::bitwise_not(&roi.try_clone()?, &mut roi, &core::no_array())?;
+            }
+
+            // Draw rectangle border
             imgproc::rectangle(
                 &mut frame,
-                core::Rect::new(top_left.x, top_left.y, size * 2, size * 2),
+                rect,
                 core::Scalar::new(50.0, 50.0, 50.0, 255.0),
                 1,
                 imgproc::LINE_8,
