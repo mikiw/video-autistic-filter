@@ -112,6 +112,32 @@ fn main() -> Result<()> {
             )?;
         }
 
+        // Connect all keypoints that are within a certain distance threshold
+        let distance_threshold = 100.0;
+        for (i, kp1) in filtered_keypoints.iter().enumerate() {
+            let pt1 = kp1.pt();
+            for (j, kp2) in filtered_keypoints.iter().enumerate() {
+                if i >= j {
+                    continue;
+                }
+                let pt2 = kp2.pt();
+                let dx = pt1.x - pt2.x;
+                let dy = pt1.y - pt2.y;
+                let dist = (dx * dx + dy * dy).sqrt();
+                if dist <= distance_threshold {
+                    imgproc::line(
+                        &mut frame,
+                        core::Point::new(pt1.x as i32, pt1.y as i32),
+                        core::Point::new(pt2.x as i32, pt2.y as i32),
+                        core::Scalar::new(200.0, 200.0, 200.0, 255.0),
+                        1,
+                        imgproc::LINE_AA,
+                        0,
+                    )?;
+                }
+            }
+        }
+
         // Write to output video
         writer.write(&frame)?;
     }
