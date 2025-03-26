@@ -1,10 +1,5 @@
 use opencv::{
-    core,
-    features2d::{self, SIFT},
-    prelude::*,
-    types,
-    videoio,
-    Result,
+    core, features2d::{self, SIFT}, imgproc, prelude::*, types, videoio, Result
 };
 use std::{env, path::Path};
 use opencv::core::Vector;
@@ -68,18 +63,23 @@ fn main() -> Result<()> {
         let mut keypoints = Vector::<KeyPoint>::new();
         sift.detect(&frame, &mut keypoints, &core::no_array())?;
 
-        // Rysujemy keypointy na kopii oryginalnej klatki
-        let mut output = Mat::default();
-        features2d::draw_keypoints(
-            &frame,
-            &keypoints,
-            &mut output,
-            core::Scalar::new(0.0, 255.0, 0.0, 0.0),
-            features2d::DrawMatchesFlags::DEFAULT,
-        )?;
+        for kp in keypoints.iter() {
+            let center = kp.pt();
+            let size = kp.size() as i32 / 2;
+            let top_left = core::Point::new((center.x - size as f32) as i32, (center.y - size as f32) as i32);
+        
+            imgproc::rectangle(
+                &mut frame,
+                core::Rect::new(top_left.x, top_left.y, size * 2, size * 2),
+                core::Scalar::new(50.0, 50.0, 50.0, 255.0),
+                1,
+                imgproc::LINE_8,
+                0,
+            )?;
+        }
 
         // Write to output video
-        writer.write(&output)?;
+        writer.write(&frame)?;
     }
 
     println!("Output saved to: {}", output_path.display());
