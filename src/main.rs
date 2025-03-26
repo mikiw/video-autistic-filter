@@ -62,12 +62,19 @@ fn main() -> Result<()> {
         let mut sift = SIFT::create(0, 3, 0.04, 10.0, 1.6, false)?;
         let mut keypoints = Vector::<KeyPoint>::new();
         sift.detect(&frame, &mut keypoints, &core::no_array())?;
+        
+        // Filter keypoints by minimum size
+        let min_size = 20.0; // Adjust this threshold as needed
+        let filtered_keypoints: Vector<KeyPoint> = keypoints.iter()
+            .filter(|kp| kp.size() >= min_size)
+            .collect();
 
-        for kp in keypoints.iter() {
+        for (i, kp) in filtered_keypoints.iter().enumerate() {
             let center = kp.pt();
             let size = kp.size() as i32 / 2;
             let top_left = core::Point::new((center.x - size as f32) as i32, (center.y - size as f32) as i32);
         
+            // Draw rectangle
             imgproc::rectangle(
                 &mut frame,
                 core::Rect::new(top_left.x, top_left.y, size * 2, size * 2),
@@ -75,6 +82,19 @@ fn main() -> Result<()> {
                 1,
                 imgproc::LINE_8,
                 0,
+            )?;
+
+            // Draw ID in top-left corner of rectangle
+            imgproc::put_text(
+                &mut frame,
+                &i.to_string(), // convert index to string
+                top_left, // position
+                imgproc::FONT_HERSHEY_SIMPLEX,
+                0.4, // font scale
+                core::Scalar::new(255.0, 255.0, 255.0, 255.0), // white color
+                1, // thickness
+                imgproc::LINE_AA,
+                false,
             )?;
         }
 
