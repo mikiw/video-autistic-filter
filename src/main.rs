@@ -58,13 +58,13 @@ fn main() -> Result<()> {
             break;
         }
 
-        // Detect keypoints using SIFT [Recommended setting is 0.1]
-        let mut sift = SIFT::create(0, 3, 0.1, 10.0, 1.6, false)?;
+        // Detect keypoints using SIFT [Recommended setting is 0.04]
+        let mut sift = SIFT::create(0, 3, 0.04, 10.0, 1.6, false)?;
         let mut keypoints = Vector::<KeyPoint>::new();
         sift.detect(&frame, &mut keypoints, &core::no_array())?;
         
         // Filter keypoints by minimum size
-        let min_size = 10.0; // Adjust this threshold as needed [Recommended setting]
+        let min_size = 30.0; // Adjust this threshold as needed [Recommended setting]
         let filtered_keypoints: Vector<KeyPoint> = keypoints.iter()
             .filter(|kp| kp.size() >= min_size)
             .collect();
@@ -93,7 +93,7 @@ fn main() -> Result<()> {
                 &mut frame,
                 rect,
                 core::Scalar::new(50.0, 50.0, 50.0, 255.0),
-                1,
+                2,
                 imgproc::LINE_8,
                 0,
             )?;
@@ -104,16 +104,16 @@ fn main() -> Result<()> {
                 &i.to_string(), // convert index to string
                 top_left, // position
                 imgproc::FONT_HERSHEY_SIMPLEX,
-                0.4, // font scale
+                0.9, // font scale
                 core::Scalar::new(255.0, 255.0, 255.0, 255.0), // white color
-                1, // thickness
+                2, // thickness
                 imgproc::LINE_AA,
                 false,
             )?;
         }
 
         // Connect all keypoints that are within a certain distance threshold
-        let distance_threshold = 100.0;
+        let distance_threshold = 300.0; // [Recommended setting]
         for (i, kp1) in filtered_keypoints.iter().enumerate() {
             let pt1 = kp1.pt();
             for (j, kp2) in filtered_keypoints.iter().enumerate() {
