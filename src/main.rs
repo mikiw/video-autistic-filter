@@ -82,9 +82,17 @@ fn main() -> Result<()> {
                 (size * 2).min(frame_height - top_left.y),
             );
 
-            // Invert colors inside the rectangle on the frame
+            // Increase contrast and invert colors
             if rect.width > 0 && rect.height > 0 {
                 let mut roi = Mat::roi_mut(&mut frame, rect)?;
+                
+                // Adjust contrast
+                let contrast_percent = 50.0; // Change this value from 0.0 to 100.0
+                let alpha = 1.0 + (contrast_percent / 100.0); // Contrast factor
+                let beta = 0.0; // Brightness offset
+                core::convert_scale_abs(&roi.try_clone()?, &mut roi, alpha, beta)?;
+
+                // Invert colors after contrast boost
                 core::bitwise_not(&roi.try_clone()?, &mut roi, &core::no_array())?;
             }
 
